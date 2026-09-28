@@ -58,6 +58,46 @@ app.post("/signup", async function (req, res) {
     }
 });
 
+// Log in an existing user
+app.post("/login", async function (req, res) {
+    const { username, password } = req.body;
+
+    // Make sure both login fields are filled in
+    if (!username || !password) {
+        return res.status(400).json({
+            message: "Username and password are required."
+        });
+    }
+
+    try {
+        // Find the user by username
+        const user = await User.findOne({ username: username });
+
+        if (!user) {
+            return res.status(404).json({
+                message: "Username does not exist."
+            });
+        }
+
+        // Compare the submitted password
+        if (user.password !== password) {
+            return res.status(401).json({
+                message: "Incorrect password."
+            });
+        }
+
+        res.status(200).json({
+            message: "Login successful."
+        });
+    } catch (error) {
+        console.error("Login error:", error);
+
+        res.status(500).json({
+            message: "Server error while logging in."
+        });
+    }
+});
+
 const PORT = 5000;
 
 // Connect to MongoDB before starting the server

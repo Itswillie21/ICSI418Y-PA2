@@ -2,9 +2,16 @@ import { useState } from "react";
 import "./App.css";
 
 function App() {
-    const [formData, setFormData] = useState({
+    const [isLogin, setIsLogin] = useState(false);
+
+    const [signupData, setSignupData] = useState({
         f_name: "",
         l_name: "",
+        username: "",
+        password: ""
+    });
+
+    const [loginData, setLoginData] = useState({
         username: "",
         password: ""
     });
@@ -12,12 +19,22 @@ function App() {
     const [message, setMessage] = useState("");
     const [isError, setIsError] = useState(false);
 
-    // Update the matching form field
-    function handleChange(event) {
+    // Update signup form fields
+    function handleSignupChange(event) {
         const { name, value } = event.target;
 
-        setFormData({
-            ...formData,
+        setSignupData({
+            ...signupData,
+            [name]: value
+        });
+    }
+
+    // Update login form fields
+    function handleLoginChange(event) {
+        const { name, value } = event.target;
+
+        setLoginData({
+            ...loginData,
             [name]: value
         });
     }
@@ -34,7 +51,7 @@ function App() {
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify(formData)
+                body: JSON.stringify(signupData)
             });
 
             const data = await response.json();
@@ -43,7 +60,7 @@ function App() {
             setIsError(!response.ok);
 
             if (response.ok) {
-                setFormData({
+                setSignupData({
                     f_name: "",
                     l_name: "",
                     username: "",
@@ -57,56 +74,130 @@ function App() {
         }
     }
 
+    // Send login information to the backend
+    async function handleLogin(event) {
+        event.preventDefault();
+        setMessage("");
+        setIsError(false);
+
+        try {
+            const response = await fetch("http://localhost:5000/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(loginData)
+            });
+
+            const data = await response.json();
+
+            setMessage(data.message);
+            setIsError(!response.ok);
+
+            if (response.ok) {
+                setLoginData({
+                    username: "",
+                    password: ""
+                });
+            }
+        } catch (error) {
+            console.error("Login request failed:", error);
+            setMessage("Could not connect to the server.");
+            setIsError(true);
+        }
+    }
+
+    // Switch between login and signup
+    function switchForm() {
+        setIsLogin(!isLogin);
+        setMessage("");
+        setIsError(false);
+    }
+
     return (
         <main>
             <section>
-                <h1>Create Account</h1>
+                <h1>{isLogin ? "Login" : "Create Account"}</h1>
 
-                <form onSubmit={handleSignup}>
-                    <label htmlFor="f_name">First Name</label>
-                    <input
-                        type="text"
-                        id="f_name"
-                        name="f_name"
-                        value={formData.f_name}
-                        onChange={handleChange}
-                    />
+                {isLogin ? (
+                    <form onSubmit={handleLogin}>
+                        <label htmlFor="loginUsername">Username</label>
+                        <input
+                            type="text"
+                            id="loginUsername"
+                            name="username"
+                            value={loginData.username}
+                            onChange={handleLoginChange}
+                        />
 
-                    <label htmlFor="l_name">Last Name</label>
-                    <input
-                        type="text"
-                        id="l_name"
-                        name="l_name"
-                        value={formData.l_name}
-                        onChange={handleChange}
-                    />
+                        <label htmlFor="loginPassword">Password</label>
+                        <input
+                            type="password"
+                            id="loginPassword"
+                            name="password"
+                            value={loginData.password}
+                            onChange={handleLoginChange}
+                        />
 
-                    <label htmlFor="username">Username</label>
-                    <input
-                        type="text"
-                        id="username"
-                        name="username"
-                        value={formData.username}
-                        onChange={handleChange}
-                    />
+                        <button type="submit">Login</button>
+                    </form>
+                ) : (
+                    <form onSubmit={handleSignup}>
+                        <label htmlFor="f_name">First Name</label>
+                        <input
+                            type="text"
+                            id="f_name"
+                            name="f_name"
+                            value={signupData.f_name}
+                            onChange={handleSignupChange}
+                        />
 
-                    <label htmlFor="password">Password</label>
-                    <input
-                        type="password"
-                        id="password"
-                        name="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                    />
+                        <label htmlFor="l_name">Last Name</label>
+                        <input
+                            type="text"
+                            id="l_name"
+                            name="l_name"
+                            value={signupData.l_name}
+                            onChange={handleSignupChange}
+                        />
 
-                    <button type="submit">Sign Up</button>
-                </form>
+                        <label htmlFor="signupUsername">Username</label>
+                        <input
+                            type="text"
+                            id="signupUsername"
+                            name="username"
+                            value={signupData.username}
+                            onChange={handleSignupChange}
+                        />
+
+                        <label htmlFor="signupPassword">Password</label>
+                        <input
+                            type="password"
+                            id="signupPassword"
+                            name="password"
+                            value={signupData.password}
+                            onChange={handleSignupChange}
+                        />
+
+                        <button type="submit">Sign Up</button>
+                    </form>
+                )}
 
                 {message && (
                     <p className={isError ? "message error" : "message success"}>
                         {message}
                     </p>
                 )}
+
+                <button
+                    type="button"
+                    className="switch-button"
+                    onClick={switchForm}
+                >
+                    {isLogin
+                        ? "Need an account? Sign Up"
+                        : "Already have an account? Login"}
+                </button>
             </section>
         </main>
     );

@@ -83,3 +83,16 @@ button:hover {
 .message.success {
     color: #2e7d32;
 }
+
+/* Switch between login and signup */
+.switch-button {
+    width: 100%;
+    margin-top: 12px;
+    background-color: transparent;
+    color: #4b286d;
+    border: 1px solid #4b286d;
+}
+
+.switch-button:hover {
+    background-color: #f4f1f7;
+}
