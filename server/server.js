@@ -1,18 +1,75 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
+
+const User = require("./models/User");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
+// Basic route to confirm the server is running
 app.get("/", function (req, res) {
     res.send("PA2 server is running");
 });
 
+// Create a new user
+app.post("/signup", async function (req, res) {
+    const { f_name, l_name, username, password } = req.body;
+
+    // Make sure all signup fields are filled in
+    if (!f_name || !l_name || !username || !password) {
+        return res.status(400).json({
+            message: "All signup fields are required."
+        });
+    }
+
+    try {
+        // Check for an existing username
+        const existingUser = await User.findOne({ username: username });
+
+        if (existingUser) {
+            return res.status(409).json({
+                message: "Username already exists."
+            });
+        }
+
+        // Create and save the new user
+        const newUser = new User({
+            f_name: f_name,
+            l_name: l_name,
+            username: username,
+            password: password
+        });
+
+        await newUser.save();
+
+        res.status(201).json({
+            message: "User created successfully."
+        });
+    } catch (error) {
+        console.error("Signup error:", error);
+
+        res.status(500).json({
+            message: "Server error while creating user."
+        });
+    }
+});
+
 const PORT = 5000;
 
-app.listen(PORT, function () {
-    console.log('Server running on port ${PORT}');
-});
+// Connect to MongoDB before starting the server
+mongoose
+    .connect(process.env.MONGO_URI)
+    .then(function () {
+        console.log("Connected to MongoDB");
+
+        app.listen(PORT, function () {
+            console.log(`Server running on port ${PORT}`);
+        });
+    })
+    .catch(function (error) {
+        console.error("MongoDB connection failed:", error);
+    });
